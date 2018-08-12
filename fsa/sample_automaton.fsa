@@ -1,0 +1,7 @@
+{
+    "table": [[0, 1, 'a', 1], [1, 2, 'b', 1], [2, 3, 'c', 1]],
+    "symbol_set": ['a', 'b', 'c'],
+    "state_set": [0, 1, 2, 3],
+    "start_state": [0],
+    "accepting_states": [3]
+}
