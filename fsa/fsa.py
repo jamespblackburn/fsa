@@ -5,25 +5,25 @@ import json
 
 class State():
     #docstring
-    def __init__(self, id_number, reachable_states={}, starts=False, accepts=False):
+    def __init__(self, id_number, arcs={}, starts=False, accepts=False):
         
-        # reachable_states = dict, key is destination state, value is tuple (symbol, probability)
+        # reachable_states = dict, key is arc symbol, value is tuple (destination, probability)
 
         self.id_number = id_number
         self.starts = starts
         self.accepts = accepts
-        self.reachable_states = reachable_states
-    
+        self.arcs = arcs
+
     def __str__(self):
         # docstring: basically print out a row of the fsa's transition table.
         as_string = str("q" + str(self.id_number))
-        for next_state in self.reachable_states.keys():
+        for arc in self.arcs:
             as_string += " --> " +\
-                         "q" + str(next_state) +\
+                         "q" + str(self.arcs[arc][0]) +\
                          "\tsymbol=" +\
-                         str(self.reachable_states[next_state][0]) +\
+                         str(arc) +\
                          "\tprob=" +\
-                         str(self.reachable_states[next_state][1])       
+                         str(self.arcs[arc][1])
         return as_string
     
     def __eq__(self, other):
@@ -34,7 +34,11 @@ class State():
 
     def __hash__(self):
         # try this first
-        return hash((self.id_number, self.reachable_states))
+        return hash(self.id_number)
+
+    def get_arcs(self):
+        # returns tuple of tuples: (destination_state, probability)
+        pass
 
 
 class Automaton():
@@ -59,7 +63,7 @@ class Automaton():
 
     def recognize(self, input_string):
         current_state = self.start_state
-        if current_state = None:
+        if current_state == None:
             print("Error: no start state found in this automaton.")
             return False
         i = 0
@@ -82,9 +86,9 @@ class Automaton():
             # If no, return False
 
 
-q0 = State(0, {1:('a', 1)}, starts=True, accepts=False)
-q1 = State(1, {2:('b', 1)}, starts=False, accepts=False)
-q2 = State(2, {3:('c', 1)}, starts=False, accepts=False)
+q0 = State(0, {'a':(1, 1)}, starts=True, accepts=False)
+q1 = State(1, {'b':(2, 1)}, starts=False, accepts=False)
+q2 = State(2, {'c':(3, 1)}, starts=False, accepts=False)
 q3 = State(3, None, starts=False, accepts=True)
 
 fsa = Automaton([q0, q1, q2])
