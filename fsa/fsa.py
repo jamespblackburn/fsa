@@ -1,4 +1,4 @@
-# Implementation of deterministic and non-deterministic finite state machines.
+# Implementation of deterministic and (TODO) non-deterministic finite state machines.
 
 import os
 import json
@@ -67,17 +67,17 @@ class Automaton():
         i = 0
 
         while i < len(input_string):
-            print('analyzing char ' + input_string[i])
             if input_string[i] not in current_state.arcs.keys():
-                print('not found in {} arcs'.format(str(current_state.id_number)))
                 return False
             current_state = current_state.arcs[input_string[i]][0]
             i += 1
         if current_state.accepts:
             return True
-        else:
-            return False
+        return False
 
+# The following builds an FSA that will accept *only* the input "abc".
+# More complex FSA's to follow...
+# also TODO is move these over to unit testing.
 
 q0 = State(0, starts=True, accepts=False)
 q1 = State(1, starts=False, accepts=False)
@@ -88,7 +88,11 @@ q0.arcs = {'a':(q1, 1)}
 q1.arcs = {'b':(q2, 1)}
 q2.arcs = {'c':(q3, 1)}
 
-fsa = Automaton([q0, q1, q2])
-print(fsa.recognize('abc'))
-print(fsa.recognize('dog'))
-print(fsa.recognize('ab'))
+# try adding an arc to expand the set of accepted strings?
+
+q2.arcs['q'] = (q3, 1)
+
+fsa = Automaton([q0, q1, q2, q3])
+
+for string in ['a', 'ab', 'abc', 'cba', 'ac', 'aaa', 'abc', 'abcd', 'abq']:
+    print(string + ": " + str(fsa.recognize(string)))
