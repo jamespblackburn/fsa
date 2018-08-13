@@ -33,12 +33,7 @@ class State():
             return False
 
     def __hash__(self):
-        # try this first
         return hash(self.id_number)
-
-    def get_arcs(self):
-        # returns tuple of tuples: (destination_state, probability)
-        pass
 
 
 class Automaton():
@@ -62,34 +57,38 @@ class Automaton():
         return as_string.strip()
 
     def recognize(self, input_string):
+        
         current_state = self.start_state
+        
         if current_state == None:
             print("Error: no start state found in this automaton.")
             return False
-        i = 0
-        while i < len(input_string):
-            if not current_state.reachable_states:
-                return False
-            if input_string[i] != current_state.reachable_states[1][0]:
-                continue
-
         
-        # pseudocode
-        # while i < len(input_string)
-            # Get the start state and make it current_state.
-            # Find all transitions in the transition table that start with it.
-            # Check to see if any of these arcs lead out on the character at index i.
-            # If yes: current state becomes the out state from that transition. Increment i.
-            # If no: return False.
-        # after loop exits: does our current state accept?
-            # If yes, return True
-            # If no, return False
+        i = 0
+
+        while i < len(input_string):
+            print('analyzing char ' + input_string[i])
+            if input_string[i] not in current_state.arcs.keys():
+                print('not found in {} arcs'.format(str(current_state.id_number)))
+                return False
+            current_state = current_state.arcs[input_string[i]][0]
+            i += 1
+        if current_state.accepts:
+            return True
+        else:
+            return False
 
 
-q0 = State(0, {'a':(1, 1)}, starts=True, accepts=False)
-q1 = State(1, {'b':(2, 1)}, starts=False, accepts=False)
-q2 = State(2, {'c':(3, 1)}, starts=False, accepts=False)
-q3 = State(3, None, starts=False, accepts=True)
+q0 = State(0, starts=True, accepts=False)
+q1 = State(1, starts=False, accepts=False)
+q2 = State(2, starts=False, accepts=False)
+q3 = State(3, starts=False, accepts=True)
+
+q0.arcs = {'a':(q1, 1)}
+q1.arcs = {'b':(q2, 1)}
+q2.arcs = {'c':(q3, 1)}
 
 fsa = Automaton([q0, q1, q2])
-print(fsa)
+print(fsa.recognize('abc'))
+print(fsa.recognize('dog'))
+print(fsa.recognize('ab'))
