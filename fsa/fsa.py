@@ -5,30 +5,19 @@ import json
 
 class State():
     #docstring
-    def __init__(self, number, starts=False, accepts=False):
-        self.number = number
+    def __init__(self, id_number, exits={}, starts=False, accepts=False):
+        # exits: dict with char keys and state id_number values.
+        self.id_number = id_number
         self.starts = starts
         self.accepts = accepts
+        self.exits = exits
     
     def __str__(self):
-        as_string = str(self.number)
+        as_string = str(self.id_number)
         as_string += " start_state={}".format(self.starts)
         as_string += " accept_state={}".format(self.accepts)
         return as_string
 
-class Transition():
-    #docstring
-    def __init__(self, start, end, symbol, prob=1):
-        self.start = start
-        self.end = end
-        self.symbol = symbol
-        self.prob = prob
-    
-    def __str__(self):
-        as_string = str(self.start) + " -> " + str(self.end)
-        as_string += ' symbol={}'.format(self.symbol)
-        as_string += ' probability={}'.format(self.prob)
-        return as_string
 
 class Automaton():
     def __init__(self, states, transitions):
@@ -91,19 +80,3 @@ class Automaton():
             # If yes, return True
             # If no, return False
             
-
-states = [State(0, starts=True),
-          State(1),
-          State(2),
-          State(3, accepts=True)]
-trans = [Transition(0, 1, 'a'),
-         Transition(1, 2, 'b'),
-         Transition(2, 3, 'c'),
-         Transition(3, 4, 'd')]
-
-fsa = Automaton(states, trans)
-
-print(fsa)
-
-print(fsa.recognize('abcd'))
-print(fsa.recognize('bcd'))
