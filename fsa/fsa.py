@@ -15,24 +15,41 @@ class State():
         self.reachable_states = reachable_states
     
     def __str__(self):
+        # docstring: basically print out a row of the fsa's transition table.
         as_string = str("q" + str(self.id_number))
-
         for next_state in self.reachable_states.keys():
             as_string += " --> " +\
                          "q" + str(next_state) +\
                          "\tsymbol=" +\
                          str(self.reachable_states[next_state][0]) +\
                          "\tprob=" +\
-                         str(self.reachable_states[next_state][1])
-                         
+                         str(self.reachable_states[next_state][1])       
         return as_string
+    
+    def __eq__(self, other):
+        try:
+            return self.id_number == other.id_number
+        except AttributeError:
+            return False
+
+    def __hash__(self):
+        # try this first
+        return hash((self.id_number, self.reachable_states))
 
 
 class Automaton():
+
     def __init__(self, states):
         self.state_set = set()
+        self.start_state = None
+        self.accept_states = set()
+        
         for state in states:
             self.state_set.add(state)
+            if state.starts:
+                self.start_state = state
+            if state.accepts:
+                self.accept_states.add(state)
 
     def __str__(self):
         as_string = ""
@@ -41,28 +58,16 @@ class Automaton():
         return as_string.strip()
 
     def recognize(self, input_string):
-        # docstring: returns True if string is recognized, otherwise False
-        
-        i = 0
         current_state = self.start_state
-
+        if current_state = None:
+            print("Error: no start state found in this automaton.")
+            return False
+        i = 0
         while i < len(input_string):
-            is_legal = self.legal_moves(current_state, input_string[i])
-            if is_legal == []:
+            if not current_state.reachable_states:
                 return False
-            else:
-                current_state = is_legal[0].end
-                i += 1
-        if current_state.accepts:
-            return True
-        return False
-
-    def legal_moves(self, current_state, current_char):
-        moves = []
-        for t in self.trans_table:
-            if t.start == current_state and t.symbol == current_char:
-                moves.append(t)
-        return moves
+            if input_string[i] != current_state.reachable_states[1][0]:
+                continue
 
         
         # pseudocode
@@ -79,7 +84,8 @@ class Automaton():
 
 q0 = State(0, {1:('a', 1)}, starts=True, accepts=False)
 q1 = State(1, {2:('b', 1)}, starts=False, accepts=False)
-q2 = State(2, {3:('c', 1)}, starts=False, accepts=True)
+q2 = State(2, {3:('c', 1)}, starts=False, accepts=False)
+q3 = State(3, None, starts=False, accepts=True)
 
 fsa = Automaton([q0, q1, q2])
 print(fsa)
