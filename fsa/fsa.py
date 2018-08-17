@@ -2,65 +2,28 @@
 
 import os
 import json
+import logging
 
-class State():
-    """Represents a unique state within a finite state automaton.
-    
-    Attributes:
-        id (int): The unique integer identifier of this state.
-        starts (bool): True if this is the start state; False if not.
-        accepts (bool): True if this state accepts; False if not.
-        arcs (dict): A dictionary with a symbol as key and a tuple of
-                     (destination, probability) as values.
-                     destination is another State instance; probability
-                     is a float from (0.0 - 1.0].
-                     TODO: implement normalization for probabilities that do
-                     not sum to 1 or arcs whose probabilities are not between
-                     0 and 1.
-    """
-    
-    def __init__(self, id, arcs={}, starts=False, accepts=False):
-        
-        self.id = id
-        self.starts = starts
-        self.accepts = accepts
-        self.arcs = arcs
-
-    def __str__(self):
-        # docstring: basically print out a row of the fsa's transition table.
-        as_string = str("q" + str(self.id))
-        for arc in self.arcs:
-            as_string += " --> " +\
-                         "q" + str(self.arcs[arc][0]) +\
-                         "\tsymbol=" +\
-                         str(arc) +\
-                         "\tprob=" +\
-                         str(self.arcs[arc][1])
-        return as_string
-    
-    def __eq__(self, other):
-        try:
-            return self.id == other.id
-        except AttributeError:
-            return False
-
-    def __hash__(self):
-        return hash(self.id)
+input_log = logging.Logger(name='parse input', level='INFO')
 
 
 class Automaton():
-
-    def __init__(self, states):
-        self.state_set = set()
-        self.start_state = None
-        self.accept_states = set()
+    
+    def __init__(self, fsa_file):
         
-        for state in states:
-            self.state_set.add(state)
-            if state.starts:
-                self.start_state = state
-            if state.accepts:
-                self.accept_states.add(state)
+        # Init fields
+        self.start_states, self.accept_states = [], []
+        self.trans_table = {}
+
+        with open(fsa_file, 'r') as fsa:
+            data = [ line.split() for line in fsa.readlines() ]
+            for item in data:
+                if item[0].strip() not in ['$', '@']:
+                    self.add_transition(data)
+                else:
+                    self.set_special_states(item[1:], item[0])
+        print(self)
+
 
     def __str__(self):
         as_string = ""
@@ -68,43 +31,30 @@ class Automaton():
             as_string += str(state) + "\n"
         return as_string.strip()
 
-    def recognize(self, input_string):
-        
-        current_state = self.start_state
-        
-        if current_state == None:
-            print("Error: no start state found in this automaton.")
-            return False
-        
-        i = 0
 
-        while i < len(input_string):
-            if input_string[i] not in current_state.arcs.keys():
-                return False
-            current_state = current_state.arcs[input_string[i]][0]
-            i += 1
-        if current_state.accepts:
-            return True
-        return False
+    def set_special_states(self, state_list, key):
+        self.start_states = [ _ for _ in state_list if key=='$' ]
+        self.accept_states = [ _ for _ in state_list if key=='@' ]
 
-# The following builds an FSA that will accept *only* the input "abc".
-# More complex FSA's to follow...
-# also TODO is move these over to unit testing.
 
-q0 = State(0, starts=True, accepts=False)
-q1 = State(1, starts=False, accepts=False)
-q2 = State(2, starts=False, accepts=False)
-q3 = State(3, starts=False, accepts=True)
+    def add_transition(self, data):
+        if len(data) != 4:
+            input_log.warning("Malformed transition data: ignoring this line")
+            return 1
+        orig, dest, sym = data[0], data[1], data[2]
+        try:
+            prob = float(data[3])
+        except ValueError or IndexError:
+            input_log.warning("Invalid probability value: defaulting to 1.0")
+            prob = 1.0
+        self.trans_table[sym] = {'orig':orig,
+                                 'dest':dest,
+                                 'sym':sym,
+                                 'prob':prob
+                                 }
+        return 0
 
-q0.arcs = {'a':(q1, 1)}
-q1.arcs = {'b':(q2, 1)}
-q2.arcs = {'c':(q3, 1)}
+    def recognize(self, input_string):    
+        pass
 
-# try adding an arc to expand the set of accepted strings?
-
-q2.arcs['q'] = (q3, 1)
-
-fsa = Automaton([q0, q1, q2, q3])
-
-for string in ['a', 'ab', 'abc', 'cba', 'ac', 'aaa', 'abc', 'abcd', 'abq']:
-    print(string + ": " + str(fsa.recognize(string)))
+auto = Automaton("test.fsa")
