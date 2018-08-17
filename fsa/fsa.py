@@ -6,8 +6,7 @@ import logging
 import re
 import pdb
 
-input_log = logging.Logger(name='parse input', level='DEBUG')
-
+input_log = logging.Logger(name='parse input', level='ERROR')
 
 class Automaton():
     
@@ -15,9 +14,35 @@ class Automaton():
         
         # Init fields
         self.trans_table = {}
-        self.states = {}
+        self.start_states = {}
+        self.accept_states = {}
 
-        with open(fsa_file, 'r') as fsa:
+        # Parse the input
+        self.parse_file(fsa_file)
+
+    def __str__(self):
+        as_string = ""
+        for t in self.trans_table.keys():
+            as_string += "transition {}: " \
+                         "from {} to {} on symbol {} with probability {}\n" \
+                         .format(t,
+                                 self.trans_table[t][0],
+                                 self.trans_table[t][1],
+                                 self.trans_table[t][2],
+                                 self.trans_table[t][3]
+                                )
+        return as_string.strip()
+
+    def parse_file(self, filename, verbose=False):
+        """
+        Parse a .fsa file. If the file is not in the correct format,
+        it will not be parsed properly and errors will be logged.
+
+        Arguments:
+        filename -- the file to be parsed.
+        verbose -- whether to output information as the method runs.
+        """
+        with open(filename, 'r') as fsa:
             line_num = 0
             for line in fsa.readlines():
                 line_num += 1
@@ -36,56 +61,55 @@ class Automaton():
                     t_key = len(self.trans_table)
                     t_val = [orig, dest, symb, prob]
                     self.trans_table[t_key] = t_val
-                    self.states[orig] = { "start": 0.0, "accept": 0.0}
-                    self.states[dest] = { "start": 0.0, "accept": 0.0}
+    
 
     def update_states(self, input_list, function):
+        
+        """
+        Update the states dictionaries with information about starting and
+        accepting states.
+
+        Arguments:
+        input_list -- a list of alternating state numbers and probabilities.
+        function -- whether this information is for 'start' or 'accept' values.
+        """
+
         i = 0
         while i < len(input_list):
             state = int(input_list[i])
             prob = float(input_list[i+1])
-            self.states[state][function] = prob
+            target_dict = getattr(self, function+'_states')
+            target_dict[state] = prob
             i += 2
 
-    def __str__(self):
-        as_string = ""
-        for t in self.trans_table.keys():
-            as_string += "transition {}: " \
-                         "from {} to {} on symbol {} with probability {}\n" \
-                         .format(t,
-                                 self.trans_table[t][0],
-                                 self.trans_table[t][1],
-                                 self.trans_table[t][2],
-                                 self.trans_table[t][3]
-                                )
-        return as_string.strip()
 
-
-    def recognize(self, input_string):    
+    def traverse(self, input_string):
         
-        input_string = list(input_string)
-        input_string.reverse()
-        for s in self.states:
-            if self.states[s]["start"] == 1.0:
-                current_state = s
+        """
+        Test whether an input string is accepted by the automaton.
 
-        print(current_state)
+        Arguments:
+        input_string -- the string to be parsed.
+        """
+        
+        current_state = 0 # for now... this will turn into a stack later
+        probability = 1.0
+
         #pdb.set_trace()
-        while input_string:
+        for sym in input_string:
             for t in self.trans_table:
-                current_sym = input_string.pop()
-                if self.trans_table[t][2] == current_sym:
-                    print("match from state {} on symbol {}".format(current_state, current_sym))
+                if sym == self.trans_table[t][2]:
                     current_state = self.trans_table[t][1]
-                    print("new current state is {}".format(current_state))
-                else:
-                    return 1 # no arcs out of current state for current symbol
-        
-        if self.states[current_state]['accept']==1.0:
-            return 0 # accepted
-        return 2 # string parsed completely but ended on a non-accepting state
-
+                    probability *= self.trans_table[t][3]
+                    break # this will also turn into a stack
+            else:
+                return None
+            
+        if current_state in self.accept_states:
+            print(input_string, "[{}]".format(probability))
+        return None
 
 auto = Automaton("test.fsa")
-print(auto)
-print(auto.recognize('abcd'))
+
+for string in ['ab', 'abcd', 'abc', 'abcde']:
+    auto.traverse(string)
