@@ -4,19 +4,31 @@ import os
 import json
 
 class State():
-    #docstring
-    def __init__(self, id_number, arcs={}, starts=False, accepts=False):
+    """Represents a unique state within a finite state automaton.
+    
+    Attributes:
+        id (int): The unique integer identifier of this state.
+        starts (bool): True if this is the start state; False if not.
+        accepts (bool): True if this state accepts; False if not.
+        arcs (dict): A dictionary with a symbol as key and a tuple of
+                     (destination, probability) as values.
+                     destination is another State instance; probability
+                     is a float from (0.0 - 1.0].
+                     TODO: implement normalization for probabilities that do
+                     not sum to 1 or arcs whose probabilities are not between
+                     0 and 1.
+    """
+    
+    def __init__(self, id, arcs={}, starts=False, accepts=False):
         
-        # reachable_states = dict, key is arc symbol, value is tuple (destination, probability)
-
-        self.id_number = id_number
+        self.id = id
         self.starts = starts
         self.accepts = accepts
         self.arcs = arcs
 
     def __str__(self):
         # docstring: basically print out a row of the fsa's transition table.
-        as_string = str("q" + str(self.id_number))
+        as_string = str("q" + str(self.id))
         for arc in self.arcs:
             as_string += " --> " +\
                          "q" + str(self.arcs[arc][0]) +\
@@ -28,12 +40,12 @@ class State():
     
     def __eq__(self, other):
         try:
-            return self.id_number == other.id_number
+            return self.id == other.id
         except AttributeError:
             return False
 
     def __hash__(self):
-        return hash(self.id_number)
+        return hash(self.id)
 
 
 class Automaton():
