@@ -8,29 +8,29 @@ import pdb
 
 input_log = logging.Logger(name='parse input', level='ERROR')
 
+
 class Automaton():
     
     def __init__(self, fsa_file):
-        
-        # Init fields
         self.trans_table = {}
         self.start_states = {}
         self.accept_states = {}
-
-        # Parse the input
-        self.parse_file(fsa_file)
+        try:
+            self.parse_file(fsa_file)
+        except FileNotFoundError:
+            print("File {} not found.").format(fsa_file)
 
     def __str__(self):
         as_string = ""
         for t in self.trans_table.keys():
-            as_string += "transition {}: " \
-                         "from {} to {} on symbol {} with probability {}\n" \
-                         .format(t,
-                                 self.trans_table[t][0],
-                                 self.trans_table[t][1],
-                                 self.trans_table[t][2],
-                                 self.trans_table[t][3]
-                                )
+            as_string +=
+                "transition {}: " \
+                "from {} to {} on symbol {} with probability {}\n" \
+                .format(t,
+                 self.trans_table[t][0],
+                 self.trans_table[t][1],
+                 self.trans_table[t][2],
+                 self.trans_table[t][3])
         return as_string.strip()
 
     def parse_file(self, filename, verbose=False):
@@ -61,17 +61,18 @@ class Automaton():
                     t_key = len(self.trans_table)
                     t_val = [orig, dest, symb, prob]
                     self.trans_table[t_key] = t_val
-    
 
     def update_states(self, input_list, function):
         
         """
-        Update the states dictionaries with information about starting and
-        accepting states.
+        Update the states dictionaries with information about starting
+        and accepting states.
 
         Arguments:
-        input_list -- a list of alternating state numbers and probabilities.
-        function -- whether this information is for 'start' or 'accept' values.
+        input_list -- a list of alternating state numbers and
+        probabilities.
+        function -- whether this information is for 'start' or
+        'accept' values.
         """
 
         i = 0
@@ -82,9 +83,7 @@ class Automaton():
             target_dict[state] = prob
             i += 2
 
-
     def traverse(self, input_string):
-        
         """
         Test whether an input string is accepted by the automaton.
 
@@ -109,7 +108,8 @@ class Automaton():
             print(input_string, "[{}]".format(probability))
         return None
 
-auto = Automaton("test.fsa")
 
-for string in ['ab', 'abcd', 'abc', 'abcde']:
-    auto.traverse(string)
+if __name__ == "__main__":
+    auto = Automaton("test.fsa")
+    for string in ['ab', 'abcd', 'abc', 'abcde']:
+        auto.traverse(string)
